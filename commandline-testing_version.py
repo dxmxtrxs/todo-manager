@@ -2,11 +2,12 @@
 
 import json 
 import os
+import sys
 
 #-------------------------===================FUNCTIONS===================-------------------------
 
 
-def rename(old,new):
+def rename(old, new):
     # Getting the tasks from the JSON file
     tasks = read_tasks()
     # checking if the user is trying to replace the old task name with the same task name 
@@ -251,7 +252,7 @@ def status(sub_exists,task):
     if sub_exists:
         while changed:
             # Asking the user if they want to delete a task or a sub-task
-            decision = input("[Main/Select/Change status] ~ Did you complete a task or a sub-task?\nTask = 1\nSub-task = 2\n")
+            decision = input("[Main/Select/Change status] ~ Would you like to change the status of a task or a sub-task?\nTask = 1\nSub-task = 2\n")
             # In the case of the user wanting ot delete a task
             if decision == "1":
                 if read_tasks()[task]["status"] == False:
@@ -359,77 +360,97 @@ while True:
     elif prompt.lower() == "select":
         while True:
             selected = input("[Main/Select] ~ What task would you like to select? ")
-            if selected in read_tasks():
-                response = input("[Main/Select] ~ What action would you like to take? ").strip()
-                if response.lower() == "subtask":
-                    add_subtask(selected, input("[Main/Select/Sub-task menu] ~ What should the sub-task be? "))
-                    break
-
-                elif response.lower() == "help":
-                    break
-
-                elif response.lower() == "list":
-                    print_subtasks(read_tasks(),selected)
-                    pass
-
-                elif response.lower() == "rename":
-                    while True:
-                        new = input("[Main/Select/Rename] ~ What should the new task name be? ")
-                        if len(new) != 0:
-                            rename(selected,new)
-                            break
-                        else:
-                            print("[Main/Select/Rename] ~ Invalid input")
-
-                elif response.lower() == "exit":
-                    break
-                
-                elif response.lower() == "delete":
-                    for sub_task in read_tasks()[selected]:
-                        if sub_task != "status":
-                            sub_exists = True
-                            break
-                        else:
-                            sub_exists = False
-                    while True:
-                        if sub_exists:
-                            deletion_mode = input("[Main/Select/Delete] ~ Would you like to delete a task or a sub-task?\nTask = 1\nSub-task = 2\n")
-                            if deletion_mode == "1":
-                                delete(read_tasks(),selected)
-                                break
-                            elif deletion_mode == "2":
-                                delete(read_tasks(),selected,input("[Main/Select/Delete] ~ What sub task would you like to delete? "))
-                                break
-                            else: 
-                                print("[Main/Select/Delete] ~ Invalid input.")
-
-                        else:
-                            delete(read_tasks(),selected)
-                            break
+            if selected == "exit":
+                print("Exiting select menu...")
+                break
+            try:
+                if selected in read_tasks():
+                    response = input("[Main/Select] ~ What action would you like to take? ").strip()
+                    if response.lower() == "subtask":
+                        add_subtask(selected, input("[Main/Select/Sub-task menu] ~ What should the sub-task be? "))
                         break
 
-                elif response.lower() == "status":
-                    for sub_task in read_tasks()[selected]:
-                        if sub_task != "status":
-                            sub_exists = True
+                    elif response.lower() == "help":
+                        print("""
+[Main/Select] ~ Help
+                            
+When using the "select" command, you can perform the following actions:
+
+- "subtask" - Add a sub-task to the selected task.
+- "list" - Display the sub-tasks of the selected task.
+- "rename" - Rename the selected task.
+- "delete" - Delete either the selected task or its sub-task.
+- "status" - Check the status of the selected task.
+
+To navigate the menu, simply type the corresponding command, and follow the prompts to complete the desired action.
+""")
+                        continue
+
+                    elif response.lower() == "list":
+                        print_subtasks(read_tasks(),selected)
+                        continue
+
+                    elif response.lower() == "rename":
+                        while True:
+                            new = input("[Main/Select/Rename] ~ What should the new task name be? ")
+                            if len(new) != 0:
+                                rename(selected,new)
+                                break
+                            else:
+                                print("[Main/Select/Rename] ~ Invalid input")
+
+                    elif response.lower() == "exit":
+                        break
+                    
+                    elif response.lower() == "delete":
+                        for sub_task in read_tasks()[selected]:
+                            if sub_task != "status":
+                                sub_exists = True
+                                break
+                            else:
+                                sub_exists = False
+                        while True:
+                            if sub_exists:
+                                deletion_mode = input("[Main/Select/Delete] ~ Would you like to delete a task or a sub-task?\nTask = 1\nSub-task = 2\n")
+                                if deletion_mode == "1":
+                                    delete(read_tasks(),selected)
+                                    break
+                                elif deletion_mode == "2":
+                                    delete(read_tasks(),selected,input("[Main/Select/Delete] ~ What sub task would you like to delete? "))
+                                    break
+                                else: 
+                                    print("[Main/Select/Delete] ~ Invalid input.")
+
+                            else:
+                                delete(read_tasks(),selected)
+                                break
                             break
-                        else:
-                            sub_exists = False
-                    status(sub_exists,selected)
+
+                    elif response.lower() == "status":
+                        for sub_task in read_tasks()[selected]:
+                            if sub_task != "status":
+                                sub_exists = True
+                                break
+                            else:
+                                sub_exists = False
+                        status(sub_exists,selected)
+                        break
+
+                    else:
+                        print("[Main/Select] ~ Please enter a valid instruction or type \"help\" for help")
+
+                elif selected.lower() == "list":
+                    tasks = read_tasks()
+                    show(tasks)
+
+                elif selected.lower() == "exit":
+                    print("[Main/Select] ~ Exiting select menu...")
                     break
-
+                
                 else:
-                    print("[Main/Select] ~ Please enter a valid instruction or type \"help\" for help")
-
-            elif selected.lower() == "list":
-                tasks = read_tasks()
-                show(tasks)
-
-            elif selected.lower() == "exit":
-                print("[Main/Select] ~ Exiting select menu...")
-                break
-            else:
-                print("[Main/Select] ~ The specified task is not listed.")
+                    print("Task doesn't exist")
+            except:
+                print("[Main/Select] ~ Task not in tasks. If you wish to exit type \"exit\"")
 
 
     elif prompt.lower() == "list":
@@ -437,9 +458,25 @@ while True:
         show(tasks)
 
 
+    elif prompt.lower() == "help":
+        print("""
+[Main] ~ Help
+
+To use the task manager, you can choose from the following commands:
+
+1. "add" - Add a new task to the task list.
+2. "select" - Select a task from the list to perform actions on it.
+3. "list" - Display all the tasks and their current status.
+4. "exit" - Exit the task manager.
+
+To navigate the menu, simply type the corresponding command, and follow the prompts to complete the desired action.
+
+""")
+
+
     elif prompt.lower() == "exit":
         print("[Main] ~ Exiting...")
-        break
+        sys.exit()
 
     else:
         print("[Main] ~ Please enter a valid input or type \"help\" for instructions")
